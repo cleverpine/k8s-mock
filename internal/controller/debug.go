@@ -20,11 +20,10 @@ func (ctrl *Debug) Middleware(c *fiber.Ctx) error {
 	// Proceed to the next middleware
 	err := c.Next()
 
-	fmt.Printf("Request URL: %s\n", c.OriginalURL())
-	fmt.Printf("Request Method: %s\n", c.Method())
-	fmt.Printf("Request Body: %s\n", body)
-
-	fmt.Printf("Response: %d\n", c.Response().StatusCode())
+	fmt.Printf(
+		"Request URL: %s\nRequest Method: %s\nRequest Body: %s\nResponse: %d\n",
+		c.OriginalURL(), c.Method(), body, c.Response().StatusCode(),
+	)
 
 	fmt.Println()
 	fmt.Println()

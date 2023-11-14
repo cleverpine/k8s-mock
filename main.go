@@ -8,9 +8,9 @@ import (
 
 func main() {
 	var (
-		debugCtrl    = controller.NewDebugController()
-		apisCtrl     = controller.NewAPIsController()
-		resourceCtrl = controller.NewResourceController()
+		debugCtrl         = controller.NewDebugController()
+		apiDefinitionCtrl = controller.NewAPIDefinitionController()
+		resourceCtrl      = controller.NewResourceController()
 	)
 
 	app := fiber.New(fiber.Config{})
@@ -18,9 +18,12 @@ func main() {
 	app.Use(debugCtrl.Middleware)
 
 	// app.Static("/", "./files")
-	app.Get("/apis", apisCtrl.GetAll)
-	app.Get("/apis/*", apisCtrl.Get)
-	app.Get("/api/:vesion/:resource", resourceCtrl.Get)
+	app.Get("/api", apiDefinitionCtrl.GetAllAPIs)
+	app.Get("/apis", apiDefinitionCtrl.GetAll)
+	app.Get("/apis/:apiGroup/:version", apiDefinitionCtrl.Get)
+
+	app.Get("/apis/:apiGroup/:vesion/:resource", resourceCtrl.GetGlobal)
+	app.Get("/apis/:apiGroup/:vesion/namespaces/:namespace/:resource", resourceCtrl.Get)
 
 	app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)

@@ -7,17 +7,24 @@ import (
 )
 
 type ResourceKey struct {
-	Version string
-	Name    string
+	APIGroupKey
+
+	Namespace string
+	Resource  string
 }
 
 func (rk *ResourceKey) Fill(c *fiber.Ctx) error {
-	rk.Version = c.Params("version")
-	rk.Name = c.Params("resource")
+	err := rk.APIGroupKey.Fill(c)
+	if err != nil {
+		return err
+	}
+
+	rk.Namespace = c.Params("namespace", "") // namespace is optional for global resources
+	rk.Resource = c.Params("resource")
 
 	return nil
 }
 
 func (rk *ResourceKey) UniqueKey() string {
-	return fmt.Sprintf("%s/%s", rk.Version, rk.Name)
+	return fmt.Sprintf("%s/%s/%s", rk.APIGroupKey.UniqueKey(), rk.Namespace, rk.Resource)
 }
