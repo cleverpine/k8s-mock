@@ -1,40 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"k8s-mock/internal/controller"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	// Initialize a new Fiber app
+	var (
+		debugCtrl    = controller.NewDebugController()
+		apisCtrl     = controller.NewAPIsController()
+		resourceCtrl = controller.NewResourceController()
+	)
+
 	app := fiber.New(fiber.Config{})
 
-	// Middleware to log each request
-	app.Use(func(c *fiber.Ctx) error {
-		// Read the body
-		body := c.Body()
+	app.Use(debugCtrl.Middleware)
 
-		// Log the details
-		fmt.Printf("URL: %s\n", c.OriginalURL())
-		fmt.Printf("Method: %s\n", c.Method())
-		fmt.Printf("Body: %s\n", body)
-
-		// Proceed to the next middleware
-		err := c.Next()
-		fmt.Printf("Response: %d\n", c.Response().StatusCode())
-		fmt.Println()
-		fmt.Println()
-
-		return err
-	})
-
-	app.Static("/", "./files")
-
-	// Add a sample route
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	// app.Static("/", "./files")
+	app.Get("/apis", apisCtrl.GetAll)
+	app.Get("/apis/*", apisCtrl.Get)
+	app.Get("/api/:vesion/:resource", resourceCtrl.Get)
 
 	app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)
