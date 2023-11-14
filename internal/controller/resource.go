@@ -1,23 +1,86 @@
 package controller
 
 import (
+	"fmt"
 	"k8s-mock/internal/dto"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func NewResourceController() *Resource {
 	return &Resource{
-		allocated: map[string][]dto.Resource{},
+		allocated:  map[string][]dto.Resource{},
+		namespaces: map[string]dto.Resource{},
 	}
 }
 
 type Resource struct {
-	allocated map[string][]dto.Resource
+	allocated  map[string][]dto.Resource
+	namespaces map[string]dto.Resource
 }
 
 func (ctrl *Resource) GetGlobal(c *fiber.Ctx) error {
-	return ctrl.Get(c)
+	var rk dto.ResourceKey
+	if err := rk.Fill(c); err != nil {
+		return err
+	}
+	if strings.ToLower(rk.APIGroup) == "project.openshift.io" &&
+		strings.ToLower(rk.Resource) == "projects" {
+		ns := make([]dto.Resource, len(ctrl.namespaces))
+		i := 0
+		for _, r := range ctrl.namespaces {
+			ns[i] = r
+			i++
+		}
+		return c.Status(fiber.StatusOK).JSON(dto.Resource{
+			"kind":       "ProjectList",
+			"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
+			"items":      ns,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"kind":       "Status",
+		"apiVersion": "v1",
+		"metadata":   dto.Resource{},
+		"status":     "Success",
+	})
+}
+
+func (ctrl *Resource) CreateGlobal(c *fiber.Ctx) error {
+	var (
+		rk   dto.ResourceKey
+		body dto.Resource
+	)
+	if err := rk.Fill(c); err != nil {
+		return err
+	} else if err := c.BodyParser(&body); err != nil {
+		return err
+	}
+
+	if strings.ToLower(rk.APIGroup) == "project.openshift.io" &&
+		(strings.ToLower(rk.Resource) == "projectrequests" || strings.ToLower(rk.Resource) == "project") {
+		rk.Resource = "Project"
+		body["kind"] = "Project"
+		body["status"] = dto.Resource{
+			"phase": "Active",
+		}
+		md, ok := body["metadata"]
+		if ok {
+			ctrl.namespaces[md.(map[string]interface{})["name"].(string)] = body
+		}
+	}
+
+	allocated, ok := ctrl.allocated[rk.UniqueKey()]
+	if !ok {
+		allocated = []dto.Resource{}
+	}
+	allocated = append(allocated, body)
+
+	ctrl.allocated[rk.UniqueKey()] = allocated
+
+	return c.Status(fiber.StatusCreated).JSON(body)
 }
 
 func (ctrl *Resource) Get(c *fiber.Ctx) error {
@@ -77,4 +140,25 @@ func (ctrl *Resource) Get(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(tableResource)
+}
+
+func (ctrl *Resource) Create(c *fiber.Ctx) error {
+
+	return c.SendStatus(fiber.StatusInternalServerError)
+}
+
+func (ctrl *Resource) GetNamespace(c *fiber.Ctx) error {
+	var (
+		nk dto.NamespaceKey
+	)
+	if err := nk.Fill(c); err != nil {
+		return err
+	}
+
+	ns, ok := ctrl.namespaces[nk.Namespace]
+	if ok {
+		return c.Status(fiber.StatusOK).JSON(ns)
+	} else {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
 }
