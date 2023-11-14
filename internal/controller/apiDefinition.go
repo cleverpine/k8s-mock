@@ -32,10 +32,10 @@ func (ctrl *APIDefinition) GetAll(c *fiber.Ctx) error {
 }
 
 func (ctrl *APIDefinition) Get(c *fiber.Ctx) error {
-	var agk dto.APIGroupKey
-	if err := agk.Fill(c); err != nil {
+	var rk dto.ResourceKey
+	if err := rk.Fill(c); err != nil {
 		return err
 	}
 
-	return sendFile(c, fmt.Sprintf("files/apis/%s/%s/serverresources.json", agk.APIGroup, agk.Version))
+	return sendFile(c, fmt.Sprintf("files/apis/%s/%s/serverresources.json", rk.APIGroup, rk.Version))
 }

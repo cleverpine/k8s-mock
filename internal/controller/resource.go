@@ -25,8 +25,12 @@ func (ctrl *Resource) GetGlobal(c *fiber.Ctx) error {
 	if err := rk.Fill(c); err != nil {
 		return err
 	}
+	fmt.Println(1)
+	fmt.Println(rk.APIGroup)
+	fmt.Println(rk.Resource)
 	if strings.ToLower(rk.APIGroup) == "project.openshift.io" &&
 		strings.ToLower(rk.Resource) == "projects" {
+		fmt.Println(2)
 		ns := make([]dto.Resource, len(ctrl.namespaces))
 		i := 0
 		for _, r := range ctrl.namespaces {
@@ -72,13 +76,13 @@ func (ctrl *Resource) CreateGlobal(c *fiber.Ctx) error {
 		}
 	}
 
-	allocated, ok := ctrl.allocated[rk.UniqueKey()]
+	allocated, ok := ctrl.allocated[rk.Path()]
 	if !ok {
 		allocated = []dto.Resource{}
 	}
 	allocated = append(allocated, body)
 
-	ctrl.allocated[rk.UniqueKey()] = allocated
+	ctrl.allocated[rk.Path()] = allocated
 
 	return c.Status(fiber.StatusCreated).JSON(body)
 }
@@ -117,7 +121,7 @@ func (ctrl *Resource) Get(c *fiber.Ctx) error {
 		},
 	}
 
-	resources, ok := ctrl.allocated[rk.UniqueKey()]
+	resources, ok := ctrl.allocated[rk.Path()]
 	if ok {
 		tableResource["rows"] = resources
 	} else {
@@ -149,13 +153,13 @@ func (ctrl *Resource) Create(c *fiber.Ctx) error {
 
 func (ctrl *Resource) GetNamespace(c *fiber.Ctx) error {
 	var (
-		nk dto.NamespaceKey
+		rk dto.ResourceKey
 	)
-	if err := nk.Fill(c); err != nil {
+	if err := rk.Fill(c); err != nil {
 		return err
 	}
 
-	ns, ok := ctrl.namespaces[nk.Namespace]
+	ns, ok := ctrl.namespaces[rk.Namespace]
 	if ok {
 		return c.Status(fiber.StatusOK).JSON(ns)
 	} else {
