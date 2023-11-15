@@ -1,6 +1,8 @@
 package repository
 
-import "k8s-mock/internal/dto"
+import (
+	"k8s-mock/internal/dto"
+)
 
 func NewResourceRepository() *Resource {
 	return &Resource{
@@ -44,9 +46,10 @@ func (repo *Resource) AppendNamespace(resource *dto.GenericResource) {
 
 func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.GenericResource {
 	for _, ns := range repo.resources["namespaces"] {
-		metadata, ok := ns["metadata"].(dto.GenericResource)
+		metadata, ok := ns["metadata"]
 		if ok {
-			if metadata["name"] == key.Namespace {
+			metadataMap, ok := metadata.(map[string]any)
+			if ok && metadataMap["name"] == key.Namespace {
 				return &ns
 			}
 		}
