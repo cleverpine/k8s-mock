@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"k8s-mock/internal/categorizer"
 	"k8s-mock/internal/dto"
 	"k8s-mock/internal/repository"
 
@@ -11,15 +10,11 @@ import (
 func NewLocalResourceController(repoResources *repository.Resource) *LocalResource {
 	return &LocalResource{
 		repoResources: repoResources,
-
-		namespaceCategorizer: &categorizer.Namespace{},
 	}
 }
 
 type LocalResource struct {
 	repoResources *repository.Resource
-
-	namespaceCategorizer *categorizer.Namespace
 }
 
 func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
@@ -31,10 +26,10 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 		return err
 	}
 
-	tableResource := dto.Resource{
+	tableResource := dto.GenericResource{
 		"kind":       "Table",
 		"apiVersion": "meta.k8s.io/v1",
-		"columnDefinitions": []dto.Resource{
+		"columnDefinitions": []dto.GenericResource{
 			{
 				"name":        "T",
 				"type":        "string",
@@ -62,14 +57,14 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 	resources := ctrl.repoResources.Get(&rk)
 	if resources == nil {
 		// TODO: use reflection to fill-in columnDefinitions
-		tableResource["rows"] = []dto.Resource{
+		tableResource["rows"] = []dto.GenericResource{
 			{
 				"cells": []string{
 					"a",
 					"b",
 					"c",
 				},
-				"object": dto.Resource{
+				"object": dto.GenericResource{
 					"kind":       "DeploymentConfig",
 					"apiVersion": "apps.openshift.io/v1",
 					"spec": map[string]interface{}{

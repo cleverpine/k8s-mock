@@ -36,3 +36,17 @@ func (rk *ResourceKey) Path() string {
 
 	return fmt.Sprintf("%s/%s/%s/%s", rk.APIGroup, rk.Version, rk.Namespace, rk.Resource)
 }
+
+func (rk *ResourceKey) IsK8sNamespace() bool {
+	// TODO:
+	return false
+}
+
+func (rk *ResourceKey) IsOSProject() bool {
+	if rk.APIGroup == "project.openshift.io" {
+		return rk.Resource == "projectrequest" || rk.Resource == "projectrequests" ||
+			rk.Resource == "project" || rk.Resource == "projects"
+	}
+
+	return false
+}

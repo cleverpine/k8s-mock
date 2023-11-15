@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"k8s-mock/internal/categorizer"
 	"k8s-mock/internal/dto"
 	"k8s-mock/internal/repository"
 
@@ -12,15 +11,11 @@ import (
 func NewGlobalResourceController(repoResources *repository.Resource) *GlobalResource {
 	return &GlobalResource{
 		repoResources: repoResources,
-
-		namespaceCategorizer: &categorizer.Namespace{},
 	}
 }
 
 type GlobalResource struct {
 	repoResources *repository.Resource
-
-	namespaceCategorizer *categorizer.Namespace
 }
 
 func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
@@ -32,20 +27,20 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 		return err
 	}
 
-	if ctrl.namespaceCategorizer.IsProject(&rk) {
-		projects := ctrl.repoResources.Get(&rk)
+	if rk.IsOSProject() {
+		projects := ctrl.repoResources.GetNamespaces()
 
-		return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
 			"kind":       "ProjectList",
 			"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
 			"items":      projects,
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
 		"kind":       "Status",
 		"apiVersion": "v1",
-		"metadata":   dto.Resource{},
+		"metadata":   dto.GenericResource{},
 		"status":     "Success",
 	})
 }
@@ -53,16 +48,15 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	var (
 		rk   dto.ResourceKey
-		body dto.Resource
+		body dto.GenericResource
 	)
 	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
 	if err != nil {
 		return err
 	}
 
-	if ctrl.namespaceCategorizer.IsNamespace(&rk) ||
-		ctrl.namespaceCategorizer.IsProject(&rk) {
-		body["status"] = dto.Resource{"phase": "Active"}
+	if rk.IsK8sNamespace() || rk.IsOSProject() {
+		body["status"] = dto.GenericResource{"phase": "Active"}
 		ctrl.repoResources.AppendNamespace(&body)
 	} else {
 		ctrl.repoResources.Append(&rk, &body)

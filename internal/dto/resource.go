@@ -1,7 +1,7 @@
 package dto
 
-type Resource map[string]any
+type GenericResource map[string]any
 
-func (r *Resource) Validate() error {
+func (r *GenericResource) Validate() error {
 	return nil
 }
