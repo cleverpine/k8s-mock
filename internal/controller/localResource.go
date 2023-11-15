@@ -32,43 +32,45 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 		// TODO: use reflection to fill-in columnDefinitions
 		tableResource.AddColumnDefinitions(
 			dto.ColumnDefinition{
-				Name:     "T",
+				Name:     "API Group",
 				Type:     "string",
-				Format:   "t",
 				Priority: 0,
 			},
 			dto.ColumnDefinition{
-				Name:     "E",
+				Name:     "Kind",
 				Type:     "string",
-				Format:   "e",
 				Priority: 0,
 			},
 			dto.ColumnDefinition{
-				Name:     "F",
+				Name:     "Name",
 				Type:     "string",
-				Format:   "f",
 				Priority: 0,
 			},
 		)
 
-		tableResource.AddRows(
-			dto.RowDefinition{
-				Cells: []string{"this", "is", "example"},
-				Object: &dto.GenericResource{
-					Kind:       "DeploymentConfig",
-					APIVersion: "apps.openshift.io/v1",
-					Spec: dto.MapResource{
-						"replicas": 3,
-					},
+		for _, res := range resources {
+			tableResource.AddRows(
+				dto.RowDefinition{
+					Cells:  []string{res.APIVersion, res.Kind, res.Metadata.Name},
+					Object: res,
 				},
-			},
-		)
-
+			)
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(tableResource)
 }
 
 func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
-	return c.SendStatus(fiber.StatusInternalServerError)
+	var (
+		rk   dto.ResourceKey
+		body dto.GenericResource
+	)
+	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
+	if err != nil {
+		return err
+	}
+
+	ctrl.repoResources.Append(&rk, &body)
+	return c.Status(fiber.StatusCreated).JSON(body)
 }

@@ -14,3 +14,6 @@ oc projects
 
 echo "Setting default project..."
 oc project test2
+
+echo "Deleting project 3..."
+oc delete project test3

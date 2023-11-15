@@ -65,6 +65,22 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(body)
 }
 
+// func (ctrl *GlobalResource) Delete(c *fiber.Ctx) error {
+// 	var rk dto.ResourceKey
+// 	err := makeInputBuilder(c).InURL(&rk).Error()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	var resource *dto.GenericResource
+// 	if rk.IsK8sNamespace() || rk.IsOSProject() {
+// 		resource = ctrl.repoResources.DeleteNamespace(&rk)
+// 	} else {
+// 		resource = ctrl.repoResources.Delete(&rk)
+// 	}
+// 	return c.Status(fiber.StatusCreated).JSON(&resource)
+// }
+
 func (ctrl *GlobalResource) GetNamespace(c *fiber.Ctx) error {
 	var (
 		rk dto.ResourceKey

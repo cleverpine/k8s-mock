@@ -33,6 +33,14 @@ func (repo *Resource) Append(key *dto.ResourceKey, resource *dto.GenericResource
 	repo.resources[key.Path()] = append(repo.resources[key.Path()], *resource)
 }
 
+// func (repo *Resource) Delete(key *dto.ResourceKey) *dto.GenericResource {
+// 	resources, ok := repo.resources[key.Path()]
+// 	if ok {
+
+// 	}
+// 	delete(repo.resources, key.Path())
+// }
+
 func (repo *Resource) GetNamespaces() []dto.GenericResource {
 	ns, ok := repo.resources["namespaces"]
 	if ok {
