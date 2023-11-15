@@ -32,6 +32,8 @@ func RESTV1(app *fiber.App) {
 
 	app.Get("/apis/:apiGroup/:version/namespaces/:namespace", globalResourceCtrl.GetNamespace)
 	app.Get("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.GetNamespace)
+	app.Delete("/apis/:apiGroup/:version/namespaces/:namespace", globalResourceCtrl.DeleteNamespace)
+	app.Delete("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.DeleteNamespace)
 
 	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resource", localResourceCtrl.Get)
 	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resource", localResourceCtrl.Get)

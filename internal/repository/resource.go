@@ -57,3 +57,19 @@ func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.GenericResource {
 
 	return nil
 }
+
+func (repo *Resource) DeleteNamespace(key *dto.ResourceKey) *dto.GenericResource {
+	nss := repo.resources["namespaces"]
+	for indx, ns := range nss {
+		metadata, ok := ns["metadata"]
+		if ok {
+			metadataMap, ok := metadata.(map[string]any)
+			if ok && metadataMap["name"] == key.Namespace {
+				repo.resources["namespaces"] = append(nss[:indx], nss[indx+1:]...)
+				return &ns
+			}
+		}
+	}
+
+	return nil
+}
