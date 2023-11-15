@@ -2,22 +2,23 @@ package dto
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type ResourceKey struct {
-	APIGroup  string
-	Version   string
-	Namespace string
-	Resource  string
+	APIGroup  string `params:"apiGroup"`
+	Version   string `params:"version"`
+	Namespace string `params:"namespace"`
+	Resource  string `params:"resource"`
 }
 
-func (rk *ResourceKey) Fill(c *fiber.Ctx) error {
-	rk.APIGroup = c.Params("apiGroup")
-	rk.Version = c.Params("version")
-	rk.Namespace = c.Params("namespace")
-	rk.Resource = c.Params("resource")
+func (rk *ResourceKey) Validate() error {
+	rk.APIGroup = strings.ToLower(rk.APIGroup)
+	rk.Version = strings.ToLower(rk.Version)
+	rk.Namespace = strings.ToLower(rk.Namespace)
+	rk.Resource = strings.ToLower(rk.Resource)
 
 	if rk.APIGroup == "" || rk.Version == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "API Group and Version must be provided")

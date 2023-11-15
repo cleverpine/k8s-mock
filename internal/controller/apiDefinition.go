@@ -19,21 +19,15 @@ func (ctrl *APIDefinition) GetAllAPIs(c *fiber.Ctx) error {
 }
 
 func (ctrl *APIDefinition) GetAll(c *fiber.Ctx) error {
-	// apis := dto.Resource{
-	// 	"apiVersion": "v1",
-	// 	"kind":       "APIResourceList",
-	// 	"resources": []string{
-	// 		"secrets",
-	// 	},
-	// }
-
-	// return c.Status(fiber.StatusOK).JSON(apis)
 	return sendFile(c, "files/apis.json")
 }
 
 func (ctrl *APIDefinition) Get(c *fiber.Ctx) error {
-	var rk dto.ResourceKey
-	if err := rk.Fill(c); err != nil {
+	var (
+		rk dto.ResourceKey
+	)
+	err := makeInputBuilder(c).InURL(&rk).Error()
+	if err != nil {
 		return err
 	}
 
