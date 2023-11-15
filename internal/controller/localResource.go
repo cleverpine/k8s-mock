@@ -17,7 +17,7 @@ type LocalResource struct {
 	repoResources *repository.Resource
 }
 
-func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
+func (ctrl *LocalResource) GetTable(c *fiber.Ctx) error {
 	var (
 		rk dto.ResourceKey
 	)
@@ -59,6 +59,30 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(tableResource)
+}
+
+func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
+	var (
+		rk     dto.ResourceKey
+		filter dto.ResourceFilter
+	)
+	err := makeInputBuilder(c).InURL(&rk).InQuery(&filter).Error()
+	if err != nil {
+		return err
+	}
+	resources := ctrl.repoResources.Get(&rk)
+
+	// TODO: fix
+	kind := "List"
+	if rk.Resource == "secret" || rk.Resource == "secrets" {
+		kind = "SecretList"
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
+		Kind:       kind,
+		APIVersion: rk.Version,
+		Items:      resources,
+	})
 }
 
 func (ctrl *LocalResource) Create(c *fiber.Ctx) error {

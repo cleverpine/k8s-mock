@@ -3,8 +3,6 @@ package dto
 import (
 	"fmt"
 	"strings"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type ResourceKey struct {
@@ -20,9 +18,9 @@ func (rk *ResourceKey) Validate() error {
 	rk.Namespace = strings.ToLower(rk.Namespace)
 	rk.Resource = strings.ToLower(rk.Resource)
 
-	if rk.APIGroup == "" || rk.Version == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "API Group and Version must be provided")
-	}
+	// if rk.APIGroup == "" || rk.Version == "" {
+	// 	return fiber.NewError(fiber.StatusBadRequest, "API Group and Version must be provided")
+	// }
 
 	return nil
 }

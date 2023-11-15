@@ -15,6 +15,7 @@ func RESTV1(app *fiber.App) {
 	var (
 		debugCtrl         = controller.NewDebugController()
 		apiDefinitionCtrl = controller.NewAPIDefinitionController()
+		metadataCtrl      = controller.NewMetadataController()
 
 		globalResourceCtrl = controller.NewGlobalResourceController(resourceRepo)
 		localResourceCtrl  = controller.NewLocalResourceController(resourceRepo)
@@ -22,8 +23,11 @@ func RESTV1(app *fiber.App) {
 
 	app.Use(debugCtrl.Middleware)
 
+	app.Get("/version", metadataCtrl.Version)
+
 	// app.Static("/", "./files")
-	app.Get("/api", apiDefinitionCtrl.GetAllAPIs)
+	app.Get("/api", apiDefinitionCtrl.GetVersions)
+	app.Get("/api/:version", apiDefinitionCtrl.GetAllAPIs)
 	app.Get("/apis", apiDefinitionCtrl.GetAll)
 	app.Get("/apis/:apiGroup/:version", apiDefinitionCtrl.Get)
 
@@ -35,8 +39,10 @@ func RESTV1(app *fiber.App) {
 	app.Delete("/apis/:apiGroup/:version/namespaces/:namespace", globalResourceCtrl.DeleteNamespace)
 	app.Delete("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.DeleteNamespace)
 
-	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resource", localResourceCtrl.Get)
-	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resource", localResourceCtrl.Get)
+	app.Get("/api/:version/namespaces/:namespace/:resource", localResourceCtrl.GetSimple)
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resource", localResourceCtrl.GetTable)
+	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resource", localResourceCtrl.GetTable)
+	app.Post("/api/:version/namespaces/:namespace/:resource", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/namespaces/:namespace/:resource", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/projects/:namespace/:resource", localResourceCtrl.Create)
 
