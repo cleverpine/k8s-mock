@@ -30,17 +30,36 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 	resources := ctrl.repoResources.Get(&rk)
 	if resources != nil {
 		// TODO: use reflection to fill-in columnDefinitions
-		tableResource.AddColumnDefinition("T", "string", "e", 0)
-		tableResource.AddColumnDefinition("E", "string", "e", 0)
-		tableResource.AddColumnDefinition("F", "string", "f", 0)
+		tableResource.AddColumnDefinitions(
+			dto.ColumnDefinition{
+				Name:     "T",
+				Type:     "string",
+				Format:   "t",
+				Priority: 0,
+			},
+			dto.ColumnDefinition{
+				Name:     "E",
+				Type:     "string",
+				Format:   "e",
+				Priority: 0,
+			},
+			dto.ColumnDefinition{
+				Name:     "F",
+				Type:     "string",
+				Format:   "f",
+				Priority: 0,
+			},
+		)
 
-		tableResource.AddRow(
-			[]string{"this", "is", "example"},
-			&dto.GenericResource{
-				"kind":       "DeploymentConfig",
-				"apiVersion": "apps.openshift.io/v1",
-				"spec": map[string]interface{}{
-					"replicas": 3,
+		tableResource.AddRows(
+			dto.RowDefinition{
+				Cells: []string{"this", "is", "example"},
+				Object: &dto.GenericResource{
+					Kind:       "DeploymentConfig",
+					APIVersion: "apps.openshift.io/v1",
+					Spec: dto.MapResource{
+						"replicas": 3,
+					},
 				},
 			},
 		)

@@ -31,17 +31,18 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 		projects := ctrl.repoResources.GetNamespaces()
 
 		return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
-			"kind":       "ProjectList",
-			"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
-			"items":      projects,
+			Kind:       "ProjectList",
+			APIVersion: fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
+			Items:      projects,
 		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
-		"kind":       "Status",
-		"apiVersion": "v1",
-		"metadata":   dto.GenericResource{},
-		"status":     "Success",
+		APIVersion: "v1",
+		Kind:       "Status",
+		Status: dto.ResourceStatus{
+			Phase: "Success",
+		},
 	})
 }
 
@@ -56,7 +57,7 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	}
 
 	if rk.IsK8sNamespace() || rk.IsOSProject() {
-		body["status"] = dto.GenericResource{"phase": "Active"}
+		body.Status.Phase = "Active"
 		ctrl.repoResources.AppendNamespace(&body)
 	} else {
 		ctrl.repoResources.Append(&rk, &body)

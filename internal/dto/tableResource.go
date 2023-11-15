@@ -1,41 +1,43 @@
 package dto
 
-type TableResource GenericResource
+type TableResource struct {
+	GenericResource
+
+	ColumnDefinitions []ColumnDefinition `json:"columnDefinitions"`
+	Rows              []RowDefinition    `json:"rows"`
+}
 
 func NewTableResource() *TableResource {
 	return &TableResource{
-		"kind":              "Table",
-		"apiVersion":        "meta.k8s.io/v1",
-		"columnDefinitions": []GenericResource{},
-		"rows":              []GenericResource{},
+		GenericResource: GenericResource{
+			Kind:       "Table",
+			APIVersion: "meta.k8s.io/v1",
+		},
+		ColumnDefinitions: []ColumnDefinition{},
+		Rows:              []RowDefinition{},
 	}
 }
 
-func (tr *TableResource) AddColumnDefinition(colName string, colType string, colFormat string, colPriority int) {
-	columnDefinitions, ok := (*tr)["columnDefinitions"].([]GenericResource)
-	if !ok {
-		columnDefinitions = []GenericResource{}
+func (tr *TableResource) AddColumnDefinitions(cd ...ColumnDefinition) {
+	for v := range cd {
+		tr.ColumnDefinitions = append(tr.ColumnDefinitions, cd[v])
 	}
-	columnDefinitions = append(columnDefinitions, GenericResource{
-		"name":     colName,
-		"type":     colType,
-		"format":   colFormat,
-		"priority": colPriority,
-	})
-
-	(*tr)["columnDefinitions"] = columnDefinitions
 }
 
-func (tr *TableResource) AddRow(cells []string, object *GenericResource) {
-	rows, ok := (*tr)["rows"].([]GenericResource)
-	if !ok {
-		rows = []GenericResource{}
+func (tr *TableResource) AddRows(r ...RowDefinition) {
+	for v := range r {
+		tr.Rows = append(tr.Rows, r[v])
 	}
+}
 
-	rows = append(rows, GenericResource{
-		"cells":  cells,
-		"object": object,
-	})
+type ColumnDefinition struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Format   string `json:"format"`
+	Priority int    `json:"priority"`
+}
 
-	(*tr)["rows"] = rows
+type RowDefinition struct {
+	Cells  []string `json:"cells"`
+	Object any      `json:"object"`
 }

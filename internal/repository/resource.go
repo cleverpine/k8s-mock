@@ -7,11 +7,13 @@ import (
 func NewResourceRepository() *Resource {
 	return &Resource{
 		resources: make(map[string][]dto.GenericResource),
+		// namespaces: make(map[string]dto.GenericResource),
 	}
 }
 
 type Resource struct {
 	resources map[string][]dto.GenericResource
+	// namespaces map[string]dto.GenericResource
 }
 
 func (repo *Resource) Get(key *dto.ResourceKey) []dto.GenericResource {
@@ -41,35 +43,38 @@ func (repo *Resource) GetNamespaces() []dto.GenericResource {
 }
 
 func (repo *Resource) AppendNamespace(resource *dto.GenericResource) {
+	// TODO: add check for namespaces
 	repo.resources["namespaces"] = append(repo.resources["namespaces"], *resource)
 }
 
 func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.GenericResource {
-	for _, ns := range repo.resources["namespaces"] {
-		metadata, ok := ns["metadata"]
-		if ok {
-			metadataMap, ok := metadata.(map[string]any)
-			if ok && metadataMap["name"] == key.Namespace {
-				return &ns
-			}
-		}
+	index := repo.getNamespaceIndex(key)
+	if index == -1 {
+		return nil
 	}
 
-	return nil
+	return &repo.resources["namespaces"][index]
 }
 
 func (repo *Resource) DeleteNamespace(key *dto.ResourceKey) *dto.GenericResource {
+	index := repo.getNamespaceIndex(key)
+	if index == -1 {
+		return nil
+	}
+
 	nss := repo.resources["namespaces"]
-	for indx, ns := range nss {
-		metadata, ok := ns["metadata"]
-		if ok {
-			metadataMap, ok := metadata.(map[string]any)
-			if ok && metadataMap["name"] == key.Namespace {
-				repo.resources["namespaces"] = append(nss[:indx], nss[indx+1:]...)
-				return &ns
-			}
+	ns := nss[index]
+	repo.resources["namespaces"] = append(nss[:index], nss[index+1:]...)
+
+	return &ns
+}
+
+func (repo *Resource) getNamespaceIndex(key *dto.ResourceKey) int {
+	for i, ns := range repo.resources["namespaces"] {
+		if ns.Metadata.Name == key.Namespace {
+			return i
 		}
 	}
 
-	return nil
+	return -1
 }
