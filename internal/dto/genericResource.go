@@ -8,6 +8,7 @@ type GenericResource struct {
 	Metadata   ResourceMetadata `json:"metadata,omitempty"`
 
 	Spec   map[string]any `json:"spec,omitempty"`
+	Data   map[string]any `json:"data,omitempty"`
 	Status ResourceStatus `json:"status,omitempty"`
 	Items  any            `json:"items,omitempty"`
 }

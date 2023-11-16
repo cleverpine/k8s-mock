@@ -70,19 +70,52 @@ func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	resources := ctrl.repoResources.Get(&rk)
+	unfilteredResources := ctrl.repoResources.Get(&rk)
+	var filteredResources []dto.GenericResource
+
+	if md := filter.GetMetadataFilter(); md != "" {
+		filteredResources = make([]dto.GenericResource, 0)
+
+		for _, v := range unfilteredResources {
+			if v.Metadata.Name == md {
+				filteredResources = append(filteredResources, v)
+			}
+		}
+	} else {
+		filteredResources = unfilteredResources
+	}
 
 	// TODO: fix
 	kind := "List"
-	if rk.Resource == "secret" || rk.Resource == "secrets" {
+	if rk.ResourceType == "secret" || rk.ResourceType == "secrets" {
 		kind = "SecretList"
 	}
 
 	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
 		Kind:       kind,
 		APIVersion: rk.Version,
-		Items:      resources,
+		Items:      filteredResources,
 	})
+}
+
+func (ctrl *LocalResource) GetSpecific(c *fiber.Ctx) error {
+	var (
+		rk     dto.ResourceKey
+		filter dto.ResourceFilter
+	)
+	err := makeInputBuilder(c).InURL(&rk).InQuery(&filter).Error()
+	if err != nil {
+		return err
+	}
+	resources := ctrl.repoResources.Get(&rk)
+
+	for _, r := range resources {
+		if r.Metadata.Name == rk.ResourceName {
+			return c.Status(fiber.StatusOK).JSON(r)
+		}
+	}
+
+	return c.SendStatus(fiber.StatusNotFound)
 }
 
 func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
@@ -97,4 +130,19 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 
 	ctrl.repoResources.Append(&rk, &body)
 	return c.Status(fiber.StatusCreated).JSON(body)
+}
+
+func (ctrl *LocalResource) Update(c *fiber.Ctx) error {
+	// var (
+	// 	rk   dto.ResourceKey
+	// 	body dto.GenericResource
+	// )
+	// err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// ctrl.repoResources.Append(&rk, &body)
+	// return c.Status(fiber.StatusCreated).JSON(body)
+	return c.SendStatus(fiber.StatusInternalServerError)
 }
