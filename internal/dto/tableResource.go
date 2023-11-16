@@ -1,7 +1,7 @@
 package dto
 
 type TableResource struct {
-	GenericResource
+	Resource
 
 	ColumnDefinitions []ColumnDefinition `json:"columnDefinitions"`
 	Rows              []RowDefinition    `json:"rows"`
@@ -9,9 +9,9 @@ type TableResource struct {
 
 func NewTableResource() *TableResource {
 	return &TableResource{
-		GenericResource: GenericResource{
-			Kind:       "Table",
-			APIVersion: "meta.k8s.io/v1",
+		Resource: Resource{
+			"kind":       "Table",
+			"apiVersion": "meta.k8s.io/v1",
 		},
 		ColumnDefinitions: []ColumnDefinition{},
 		Rows:              []RowDefinition{},
@@ -19,15 +19,11 @@ func NewTableResource() *TableResource {
 }
 
 func (tr *TableResource) AddColumnDefinitions(cd ...ColumnDefinition) {
-	for v := range cd {
-		tr.ColumnDefinitions = append(tr.ColumnDefinitions, cd[v])
-	}
+	tr.ColumnDefinitions = append(tr.ColumnDefinitions, cd...)
 }
 
 func (tr *TableResource) AddRows(r ...RowDefinition) {
-	for v := range r {
-		tr.Rows = append(tr.Rows, r[v])
-	}
+	tr.Rows = append(tr.Rows, r...)
 }
 
 type ColumnDefinition struct {

@@ -30,18 +30,18 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 	if rk.IsOSProject() {
 		projects := ctrl.repoResources.GetNamespaces()
 
-		return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
-			Kind:       "ProjectList",
-			APIVersion: fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
-			Items:      projects,
+		return c.Status(fiber.StatusOK).JSON(dto.Resource{
+			"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
+			"kind":       "ProjectList",
+			"items":      projects,
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
-		APIVersion: "v1",
-		Kind:       "Status",
-		Status: dto.ResourceStatus{
-			Phase: "Success",
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"apiVersion": "v1",
+		"kind":       "Status",
+		"status": dto.Resource{
+			"phase": "Success",
 		},
 	})
 }
@@ -49,7 +49,7 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	var (
 		rk   dto.ResourceKey
-		body dto.GenericResource
+		body dto.Resource
 	)
 	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
 	if err != nil {
@@ -57,7 +57,7 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	}
 
 	if rk.IsK8sNamespace() || rk.IsOSProject() {
-		body.Status.Phase = "Active"
+		body.Set("status", dto.Resource{"phase": "Active"})
 		ctrl.repoResources.AppendNamespace(&body)
 	} else {
 		ctrl.repoResources.Append(&rk, &body)

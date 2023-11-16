@@ -51,7 +51,7 @@ func (ctrl *LocalResource) GetTable(c *fiber.Ctx) error {
 		for _, res := range resources {
 			tableResource.AddRows(
 				dto.RowDefinition{
-					Cells:  []string{res.APIVersion, res.Kind, res.Metadata.Name},
+					Cells:  []string{res.GetString("apiVersion"), res.GetString("kind"), res.GetString("metadata.name")},
 					Object: res,
 				},
 			)
@@ -70,19 +70,18 @@ func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	unfilteredResources := ctrl.repoResources.Get(&rk)
-	var filteredResources []dto.GenericResource
+
+	var resources []dto.Resource
 
 	if md := filter.GetMetadataFilter(); md != "" {
-		filteredResources = make([]dto.GenericResource, 0)
-
-		for _, v := range unfilteredResources {
-			if v.Metadata.Name == md {
-				filteredResources = append(filteredResources, v)
-			}
+		r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+			return r.GetString("metadata.name") == md
+		})
+		if r != nil {
+			resources = []dto.Resource{*r}
 		}
 	} else {
-		filteredResources = unfilteredResources
+		resources = ctrl.repoResources.Get(&rk)
 	}
 
 	// TODO: fix
@@ -91,10 +90,10 @@ func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
 		kind = "SecretList"
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.GenericResource{
-		Kind:       kind,
-		APIVersion: rk.Version,
-		Items:      filteredResources,
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"kind":       kind,
+		"apiVersion": rk.Version,
+		"items":      resources,
 	})
 }
 
@@ -107,21 +106,21 @@ func (ctrl *LocalResource) GetSpecific(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	resources := ctrl.repoResources.Get(&rk)
+	r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+		return r.Get("metadata.name") == rk.ResourceName
+	})
 
-	for _, r := range resources {
-		if r.Metadata.Name == rk.ResourceName {
-			return c.Status(fiber.StatusOK).JSON(r)
-		}
+	if r == nil {
+		return c.SendStatus(fiber.StatusNotFound)
+	} else {
+		return c.Status(fiber.StatusOK).JSON(r)
 	}
-
-	return c.SendStatus(fiber.StatusNotFound)
 }
 
 func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 	var (
 		rk   dto.ResourceKey
-		body dto.GenericResource
+		body dto.Resource
 	)
 	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
 	if err != nil {
