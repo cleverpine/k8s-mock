@@ -2,22 +2,26 @@ package dto
 
 import (
 	"strings"
-
-	"github.com/gofiber/fiber/v2"
 )
 
+// TODO: add rwmutex
 type Resource map[string]any
 
 func (r *Resource) Validate() error {
-	if r.Get("metadata") == nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Metadata must exist")
-	}
+	// if r.Get("metadata") == nil {
+	// 	return fiber.NewError(fiber.StatusBadRequest, "Metadata must exist")
+	// }
 
 	return nil
 }
 
 func (r *Resource) GetSubResource(key string) *Resource {
-	return resourceGetT[Resource](r, key)
+	m := resourceGetT[map[string]any](r, key)
+	if m == nil {
+		return nil
+	}
+	p := Resource(*m)
+	return &p
 }
 
 func (r *Resource) GetString(key string) string {
@@ -58,8 +62,8 @@ func (r *Resource) Set(key string, value any) {
 
 	subKeys := strings.Split(key, "#")
 	for i, k := range subKeys {
-		if i >= len(subKeys) {
-			sr.Set(k, value)
+		if i >= len(subKeys)-1 {
+			(*sr)[k] = value
 			break
 		}
 

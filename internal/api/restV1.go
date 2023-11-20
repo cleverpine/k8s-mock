@@ -9,16 +9,17 @@ import (
 
 func RESTV1(app *fiber.App) {
 	var (
-		resourceRepo = repository.NewResourceRepository()
+		repoResources = repository.NewResourceRepository()
 	)
 
 	var (
 		debugCtrl         = controller.NewDebugController()
 		apiDefinitionCtrl = controller.NewAPIDefinitionController()
+		namespaceCtrl     = controller.NewNamespaceController(repoResources)
 		metadataCtrl      = controller.NewMetadataController()
 
-		globalResourceCtrl = controller.NewGlobalResourceController(resourceRepo)
-		localResourceCtrl  = controller.NewLocalResourceController(resourceRepo)
+		globalResourceCtrl = controller.NewGlobalResourceController(repoResources)
+		localResourceCtrl  = controller.NewLocalResourceController(repoResources)
 	)
 
 	app.Use(debugCtrl.Middleware)
@@ -26,22 +27,35 @@ func RESTV1(app *fiber.App) {
 	app.Get("/version", metadataCtrl.Version)
 
 	// app.Static("/", "./files")
+
+	// API Definitions
 	app.Get("/api", apiDefinitionCtrl.GetVersions)
 	app.Get("/api/:version", apiDefinitionCtrl.GetAllAPIs)
 	app.Get("/apis", apiDefinitionCtrl.GetAll)
 	app.Get("/apis/:apiGroup/:version", apiDefinitionCtrl.Get)
 
+	// Global Resource Management
 	app.Get("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Get)
 	app.Get("/apis/:apiGroup/:version/:resourceType/~", globalResourceCtrl.GetUser)
 	app.Post("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Create)
 
-	app.Get("/api/:version/namespaces/:namespace", globalResourceCtrl.GetNamespace)
-	app.Get("/api/:version/projects/:namespace", globalResourceCtrl.GetNamespace)
-	app.Get("/apis/:apiGroup/:version/namespaces/:namespace", globalResourceCtrl.GetNamespace)
-	app.Get("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.GetNamespace)
-	app.Delete("/apis/:apiGroup/:version/namespaces/:namespace", globalResourceCtrl.DeleteNamespace)
-	app.Delete("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.DeleteNamespace)
+	// Namespace Management
+	app.Get("/api/:version/namespaces/:namespace", namespaceCtrl.Get)
+	app.Get("/api/:version/projects/:namespace", namespaceCtrl.Get)
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace", namespaceCtrl.Get)
+	app.Get("/apis/:apiGroup/:version/projects/:namespace", namespaceCtrl.Get)
 
+	app.Patch("/api/:version/namespaces/:namespace", namespaceCtrl.Update)
+	app.Patch("/api/:version/projects/:namespace", namespaceCtrl.Update)
+	app.Patch("/apis/:apiGroup/:version/namespaces/:namespace", namespaceCtrl.Update)
+	app.Patch("/apis/:apiGroup/:version/projects/:namespace", namespaceCtrl.Update)
+
+	app.Delete("/api/:version/namespaces/:namespace", namespaceCtrl.Delete)
+	app.Delete("/api/:version/projects/:namespace", namespaceCtrl.Delete)
+	app.Delete("/apis/:apiGroup/:version/namespaces/:namespace", namespaceCtrl.Delete)
+	app.Delete("/apis/:apiGroup/:version/projects/:namespace", namespaceCtrl.Delete)
+
+	// Local Resource Management
 	app.Get("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
 	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
 	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.GetSimple)

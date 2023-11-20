@@ -106,37 +106,3 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 // 	}
 // 	return c.Status(fiber.StatusCreated).JSON(&resource)
 // }
-
-func (ctrl *GlobalResource) GetNamespace(c *fiber.Ctx) error {
-	var (
-		rk dto.ResourceKey
-	)
-	err := makeInputBuilder(c).InURL(&rk).Error()
-	if err != nil {
-		return err
-	}
-
-	ns := ctrl.repoResources.GetNamespace(&rk)
-	if ns == nil {
-		return c.SendStatus(fiber.StatusNotFound)
-	} else {
-		return c.Status(fiber.StatusOK).JSON(ns)
-	}
-}
-
-func (ctrl *GlobalResource) DeleteNamespace(c *fiber.Ctx) error {
-	var (
-		rk dto.ResourceKey
-	)
-	err := makeInputBuilder(c).InURL(&rk).Error()
-	if err != nil {
-		return err
-	}
-
-	ns := ctrl.repoResources.DeleteNamespace(&rk)
-	if ns == nil {
-		return c.SendStatus(fiber.StatusNotFound)
-	} else {
-		return c.Status(fiber.StatusOK).JSON(ns)
-	}
-}
