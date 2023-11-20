@@ -46,6 +46,32 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 	})
 }
 
+func (ctrl *GlobalResource) GetUser(c *fiber.Ctx) error {
+	var (
+		rk dto.ResourceKey
+	)
+	err := makeInputBuilder(c).InURL(&rk).Error()
+	if err != nil {
+		return err
+	}
+
+	// TODO: replace with actual user management
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"kind":       "User",
+		"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
+		"metadata": dto.Resource{
+			"name": "kubeadmin",
+		},
+		"identities": []string{
+			"developer:kubeadmin",
+		},
+		"groups": []string{
+			"system:authenticated",
+			"system:authenticated:oauth",
+		},
+	})
+}
+
 func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	var (
 		rk   dto.ResourceKey

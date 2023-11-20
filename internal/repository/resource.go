@@ -2,30 +2,37 @@ package repository
 
 import (
 	"k8s-mock/internal/dto"
+	"sync"
 )
 
 func NewResourceRepository() *Resource {
 	return &Resource{
-		resources: make(map[string][]dto.Resource),
-		// namespaces: make(map[string]dto.GenericResource),
+		resources:  make(map[string][]dto.Resource),
+		resourcesM: sync.Mutex{},
 	}
 }
 
 type Resource struct {
-	resources map[string][]dto.Resource
-	// namespaces map[string]dto.GenericResource
+	resources  map[string][]dto.Resource
+	resourcesM sync.Mutex
 }
 
 func (repo *Resource) Get(key *dto.ResourceKey) []dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	res := repo.resources[key.Path()]
 	return res
 }
 
 func (repo *Resource) Replace(key *dto.ResourceKey, resources []dto.Resource) {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	repo.resources[key.Path()] = resources
 }
 
 func (repo *Resource) Append(key *dto.ResourceKey, resource *dto.Resource) {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	repo.resources[key.Path()] = append(repo.resources[key.Path()], *resource)
 }
 
@@ -38,6 +45,8 @@ func (repo *Resource) Append(key *dto.ResourceKey, resource *dto.Resource) {
 // }
 
 func (repo *Resource) GetNamespaces() []dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	ns, ok := repo.resources["namespaces"]
 	if ok {
 		return ns
@@ -47,11 +56,15 @@ func (repo *Resource) GetNamespaces() []dto.Resource {
 }
 
 func (repo *Resource) AppendNamespace(resource *dto.Resource) {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	// TODO: add check for namespace collision
 	repo.resources["namespaces"] = append(repo.resources["namespaces"], *resource)
 }
 
 func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	index := repo.getNamespaceIndex(key)
 	if index == -1 {
 		return nil
@@ -61,6 +74,8 @@ func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.Resource {
 }
 
 func (repo *Resource) DeleteNamespace(key *dto.ResourceKey) *dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	index := repo.getNamespaceIndex(key)
 	if index == -1 {
 		return nil
@@ -73,7 +88,15 @@ func (repo *Resource) DeleteNamespace(key *dto.ResourceKey) *dto.Resource {
 	return &ns
 }
 
+func (repo *Resource) FindResourcesByFilter(key *dto.ResourceKey, filter FilterFunc) []dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
+	return repo.findResourcesByFilter(key.Path(), filter)
+}
+
 func (repo *Resource) FindResourceByFilter(key *dto.ResourceKey, filter FilterFunc) (*dto.Resource, int) {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
 	return repo.findResourceByFilter(key.Path(), filter)
 }
 
@@ -81,11 +104,21 @@ func (repo *Resource) getNamespaceIndex(key *dto.ResourceKey) int {
 	_, index := repo.findResourceByFilter(
 		"namespaces",
 		func(ns *dto.Resource) bool {
-			return ns.GetString("metadata.name") == key.Namespace
+			return ns.GetString("metadata#name") == key.Namespace
 		},
 	)
 
 	return index
+}
+
+func (repo *Resource) findResourcesByFilter(key string, filter FilterFunc) []dto.Resource {
+	rs := make([]dto.Resource, 0)
+	for _, r := range repo.resources[key] {
+		if filter(&r) {
+			rs = append(rs, r)
+		}
+	}
+	return rs
 }
 
 func (repo *Resource) findResourceByFilter(key string, filter FilterFunc) (*dto.Resource, int) {

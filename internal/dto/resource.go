@@ -35,7 +35,7 @@ func (r *Resource) Get(key string) any {
 	}
 
 	var sr map[string]any = *r
-	subKeys := strings.Split(key, ".")
+	subKeys := strings.Split(key, "#")
 	for i, k := range subKeys {
 		if t, ok := sr[k]; ok {
 			if i >= len(subKeys)-1 {
@@ -56,7 +56,7 @@ func (r *Resource) Get(key string) any {
 func (r *Resource) Set(key string, value any) {
 	sr := r
 
-	subKeys := strings.Split(key, ".")
+	subKeys := strings.Split(key, "#")
 	for i, k := range subKeys {
 		if i >= len(subKeys) {
 			sr.Set(k, value)
@@ -71,6 +71,26 @@ func (r *Resource) Set(key string, value any) {
 		}
 
 		sr = tmpSr
+	}
+}
+
+func (r *Resource) Merge(r2 *Resource) {
+	r.recursiveMerge("", *r2)
+}
+
+func (r *Resource) recursiveMerge(prevKey string, r2 map[string]any) {
+	for k, v := range r2 {
+		newKey := prevKey
+		if newKey == "" {
+			newKey = k
+		} else {
+			newKey += "#" + k
+		}
+		if r2s, ok := v.(map[string]any); ok {
+			r.recursiveMerge(newKey, r2s)
+		} else {
+			r.Set(newKey, v)
+		}
 	}
 }
 

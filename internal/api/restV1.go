@@ -32,6 +32,7 @@ func RESTV1(app *fiber.App) {
 	app.Get("/apis/:apiGroup/:version", apiDefinitionCtrl.Get)
 
 	app.Get("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Get)
+	app.Get("/apis/:apiGroup/:version/:resourceType/~", globalResourceCtrl.GetUser)
 	app.Post("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Create)
 
 	app.Get("/api/:version/namespaces/:namespace", globalResourceCtrl.GetNamespace)
@@ -42,8 +43,8 @@ func RESTV1(app *fiber.App) {
 	app.Delete("/apis/:apiGroup/:version/projects/:namespace", globalResourceCtrl.DeleteNamespace)
 
 	app.Get("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
-	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetTable)
-	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.GetTable)
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
+	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.GetSimple)
 	app.Post("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.Create)

@@ -25,40 +25,45 @@ func (ctrl *LocalResource) GetTable(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	tableResource := dto.NewTableResource()
+	// tableResource := dto.NewTableResource()
 
-	resources := ctrl.repoResources.Get(&rk)
-	if resources != nil {
-		// TODO: use reflection to fill-in columnDefinitions
-		tableResource.AddColumnDefinitions(
-			dto.ColumnDefinition{
-				Name:     "API Group",
-				Type:     "string",
-				Priority: 0,
-			},
-			dto.ColumnDefinition{
-				Name:     "Kind",
-				Type:     "string",
-				Priority: 0,
-			},
-			dto.ColumnDefinition{
-				Name:     "Name",
-				Type:     "string",
-				Priority: 0,
-			},
-		)
+	resources := ctrl.repoResources.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
+		return r.GetString("metadata#namespace") == rk.Namespace
+	})
 
-		for _, res := range resources {
-			tableResource.AddRows(
-				dto.RowDefinition{
-					Cells:  []string{res.GetString("apiVersion"), res.GetString("kind"), res.GetString("metadata.name")},
-					Object: res,
-				},
-			)
-		}
-	}
+	// if resources != nil {
+	// 	// TODO: use reflection to fill-in columnDefinitions
+	// 	tableResource.AddColumnDefinitions(
+	// 		dto.ColumnDefinition{
+	// 			Name:     "API Group",
+	// 			Type:     "string",
+	// 			Priority: 0,
+	// 		},
+	// 		dto.ColumnDefinition{
+	// 			Name:     "Kind",
+	// 			Type:     "string",
+	// 			Priority: 0,
+	// 		},
+	// 		dto.ColumnDefinition{
+	// 			Name:     "Name",
+	// 			Type:     "string",
+	// 			Priority: 0,
+	// 		},
+	// 	)
 
-	return c.Status(fiber.StatusOK).JSON(tableResource)
+	// 	for _, res := range resources {
+	// 		tableResource.AddRows(
+	// 			dto.RowDefinition{
+	// 				Cells:  []string{res.GetString("apiVersion"), res.GetString("kind"), res.GetString("metadata#name")},
+	// 				Object: res,
+	// 			},
+	// 		)
+	// 	}
+	// }
+
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"resources": resources,
+	})
 }
 
 func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
@@ -75,10 +80,11 @@ func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
 
 	if md := filter.GetMetadataFilter(); md != "" {
 		r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
-			return r.GetString("metadata.name") == md
+			return r.GetString("metadata#name") == md &&
+				r.GetString("metadata#namespace") == rk.Namespace
 		})
 		if r != nil {
-			resources = []dto.Resource{*r}
+			return c.Status(fiber.StatusOK).JSON(r)
 		}
 	} else {
 		resources = ctrl.repoResources.Get(&rk)
@@ -88,6 +94,8 @@ func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
 	kind := "List"
 	if rk.ResourceType == "secret" || rk.ResourceType == "secrets" {
 		kind = "SecretList"
+	} else if rk.ResourceType == "resourcequota" || rk.ResourceType == "resourcequotas" {
+		kind = "ResourceQuotaList"
 	}
 
 	return c.Status(fiber.StatusOK).JSON(dto.Resource{
@@ -107,7 +115,8 @@ func (ctrl *LocalResource) GetSpecific(c *fiber.Ctx) error {
 		return err
 	}
 	r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
-		return r.Get("metadata.name") == rk.ResourceName
+		return r.GetString("metadata#name") == rk.ResourceName &&
+			r.GetString("metadata#namespace") == rk.Namespace
 	})
 
 	if r == nil {
@@ -132,16 +141,25 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 }
 
 func (ctrl *LocalResource) Update(c *fiber.Ctx) error {
-	// var (
-	// 	rk   dto.ResourceKey
-	// 	body dto.GenericResource
-	// )
-	// err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
-	// if err != nil {
-	// 	return err
-	// }
+	var (
+		rk   dto.ResourceKey
+		body dto.Resource
+	)
+	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
+	if err != nil {
+		return err
+	}
 
-	// ctrl.repoResources.Append(&rk, &body)
-	// return c.Status(fiber.StatusCreated).JSON(body)
-	return c.SendStatus(fiber.StatusInternalServerError)
+	resource, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+		return r.GetString("metadata#name") == rk.ResourceName &&
+			r.GetString("metadata#namespace") == rk.Namespace
+	})
+
+	if resource == nil {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	resource.Merge(&body)
+
+	return c.Status(fiber.StatusOK).JSON(body)
 }

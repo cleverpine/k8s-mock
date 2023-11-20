@@ -1,29 +1,29 @@
 package dto
 
-type TableResource struct {
-	Resource
+type TableResource Resource
 
-	ColumnDefinitions []ColumnDefinition `json:"columnDefinitions"`
-	Rows              []RowDefinition    `json:"rows"`
-}
-
-func NewTableResource() *TableResource {
-	return &TableResource{
-		Resource: Resource{
-			"kind":       "Table",
-			"apiVersion": "meta.k8s.io/v1",
-		},
-		ColumnDefinitions: []ColumnDefinition{},
-		Rows:              []RowDefinition{},
+func NewTableResource() TableResource {
+	return TableResource{
+		"kind":              "Table",
+		"columnDefinitions": []ColumnDefinition{},
+		"rows":              []RowDefinition{},
 	}
 }
 
-func (tr *TableResource) AddColumnDefinitions(cd ...ColumnDefinition) {
-	tr.ColumnDefinitions = append(tr.ColumnDefinitions, cd...)
+func (tr *TableResource) AddColumnDefinitions(newCds ...ColumnDefinition) {
+	if cds, ok := (*tr)["columnDefinitions"]; ok {
+		if cdsTyped, ok := cds.([]ColumnDefinition); ok {
+			(*tr)["columnDefinitions"] = append(cdsTyped, newCds...)
+		}
+	}
 }
 
-func (tr *TableResource) AddRows(r ...RowDefinition) {
-	tr.Rows = append(tr.Rows, r...)
+func (tr *TableResource) AddRows(newRows ...RowDefinition) {
+	if rows, ok := (*tr)["rows"]; ok {
+		if rowsTyped, ok := rows.([]RowDefinition); ok {
+			(*tr)["rows"] = append(rowsTyped, newRows...)
+		}
+	}
 }
 
 type ColumnDefinition struct {

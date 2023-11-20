@@ -1,6 +1,8 @@
 package dto
 
-import "strings"
+import (
+	"strings"
+)
 
 type ResourceFilter struct {
 	FieldSelector string `query:"fieldSelector"`
@@ -12,5 +14,5 @@ func (rf *ResourceFilter) Validate() error {
 
 // TODO: improve logic
 func (rf *ResourceFilter) GetMetadataFilter() string {
-	return strings.ReplaceAll(rf.FieldSelector, "metadata.name", "")
+	return strings.ReplaceAll(rf.FieldSelector, "metadata.name=", "")
 }

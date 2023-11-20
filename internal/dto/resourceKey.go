@@ -27,13 +27,19 @@ func (rk *ResourceKey) Validate() error {
 }
 
 func (rk *ResourceKey) Path() string {
-	if rk.Namespace == "" {
-		return fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version)
-	} else if rk.ResourceType == "" {
-		return fmt.Sprintf("%s/%s/%s", rk.APIGroup, rk.Version, rk.Namespace)
+	elements := make([]string, 0)
+
+	if rk.Version != "" {
+		elements = append(elements, rk.Version)
 	}
 
-	return fmt.Sprintf("%s/%s/%s/%s", rk.APIGroup, rk.Version, rk.Namespace, rk.ResourceType)
+	if rk.ResourceType != "" {
+		elements = append(elements, rk.ResourceType)
+	}
+
+	k := strings.Join(elements, "/")
+	fmt.Println("KEY:", k)
+	return k
 }
 
 func (rk *ResourceKey) IsK8sNamespace() bool {
