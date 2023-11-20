@@ -30,10 +30,25 @@ func (repo *Resource) Replace(key *dto.ResourceKey, resources []dto.Resource) {
 	repo.resources[key.Path()] = resources
 }
 
-func (repo *Resource) Append(key *dto.ResourceKey, resource *dto.Resource) {
+func (repo *Resource) Append(key *dto.ResourceKey, newResource *dto.Resource) {
 	repo.resourcesM.Lock()
 	defer repo.resourcesM.Unlock()
-	repo.resources[key.Path()] = append(repo.resources[key.Path()], *resource)
+
+	var (
+		k         = key.Path()
+		resources = repo.resources[k]
+	)
+
+	newResourceName := newResource.GetString("metadata#name")
+	newResourceNamespace := newResource.GetString("metadata#namespace")
+	for _, resource := range resources {
+		if resource.GetString("metadata#name") == newResourceName &&
+			resource.GetString("metadata#namespace") == newResourceNamespace {
+			return
+		}
+	}
+
+	repo.resources[k] = append(resources, *newResource)
 }
 
 // func (repo *Resource) Delete(key *dto.ResourceKey) *dto.GenericResource {

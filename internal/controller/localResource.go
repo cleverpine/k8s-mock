@@ -38,7 +38,9 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusOK).JSON(r)
 		}
 	} else {
-		resources = ctrl.repoResources.Get(&rk)
+		resources = ctrl.repoResources.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
+			return r.GetString("metadata#namespace") == rk.Namespace
+		})
 	}
 
 	// TODO: fix
