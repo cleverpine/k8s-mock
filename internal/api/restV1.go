@@ -40,6 +40,7 @@ func RESTV1(app *fiber.App) {
 	app.Post("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Create)
 
 	// Namespace Management
+	app.Get("/api/:version/namespaces", namespaceCtrl.GetAll)
 	app.Get("/api/:version/namespaces/:namespace", namespaceCtrl.Get)
 	app.Get("/api/:version/projects/:namespace", namespaceCtrl.Get)
 	app.Get("/apis/:apiGroup/:version/namespaces/:namespace", namespaceCtrl.Get)
@@ -56,9 +57,11 @@ func RESTV1(app *fiber.App) {
 	app.Delete("/apis/:apiGroup/:version/projects/:namespace", namespaceCtrl.Delete)
 
 	// Local Resource Management
-	app.Get("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
-	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.GetSimple)
-	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.GetSimple)
+	app.Get("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Get)
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Get)
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.GetSpecific)
+	app.Patch("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.Update)
+	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.Get)
 	app.Post("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.Create)

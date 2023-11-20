@@ -62,6 +62,17 @@ func (repo *Resource) AppendNamespace(resource *dto.Resource) {
 	repo.resources["namespaces"] = append(repo.resources["namespaces"], *resource)
 }
 
+func (repo *Resource) GetAllNamespaces() []dto.Resource {
+	repo.resourcesM.Lock()
+	defer repo.resourcesM.Unlock()
+
+	if nss, ok := repo.resources["namespaces"]; ok {
+		return nss
+	}
+
+	return nil
+}
+
 func (repo *Resource) GetNamespace(key *dto.ResourceKey) *dto.Resource {
 	repo.resourcesM.Lock()
 	defer repo.resourcesM.Unlock()

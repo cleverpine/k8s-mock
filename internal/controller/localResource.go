@@ -17,56 +17,7 @@ type LocalResource struct {
 	repoResources *repository.Resource
 }
 
-func (ctrl *LocalResource) GetTable(c *fiber.Ctx) error {
-	var (
-		rk dto.ResourceKey
-	)
-	err := makeInputBuilder(c).InURL(&rk).Error()
-	if err != nil {
-		return err
-	}
-	// tableResource := dto.NewTableResource()
-
-	resources := ctrl.repoResources.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
-		return r.GetString("metadata#namespace") == rk.Namespace
-	})
-
-	// if resources != nil {
-	// 	// TODO: use reflection to fill-in columnDefinitions
-	// 	tableResource.AddColumnDefinitions(
-	// 		dto.ColumnDefinition{
-	// 			Name:     "API Group",
-	// 			Type:     "string",
-	// 			Priority: 0,
-	// 		},
-	// 		dto.ColumnDefinition{
-	// 			Name:     "Kind",
-	// 			Type:     "string",
-	// 			Priority: 0,
-	// 		},
-	// 		dto.ColumnDefinition{
-	// 			Name:     "Name",
-	// 			Type:     "string",
-	// 			Priority: 0,
-	// 		},
-	// 	)
-
-	// 	for _, res := range resources {
-	// 		tableResource.AddRows(
-	// 			dto.RowDefinition{
-	// 				Cells:  []string{res.GetString("apiVersion"), res.GetString("kind"), res.GetString("metadata#name")},
-	// 				Object: res,
-	// 			},
-	// 		)
-	// 	}
-	// }
-
-	return c.Status(fiber.StatusOK).JSON(dto.Resource{
-		"resources": resources,
-	})
-}
-
-func (ctrl *LocalResource) GetSimple(c *fiber.Ctx) error {
+func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 	var (
 		rk     dto.ResourceKey
 		filter dto.ResourceFilter
@@ -161,5 +112,5 @@ func (ctrl *LocalResource) Update(c *fiber.Ctx) error {
 
 	resource.Merge(&body)
 
-	return c.Status(fiber.StatusOK).JSON(body)
+	return c.Status(fiber.StatusOK).JSON(resource)
 }

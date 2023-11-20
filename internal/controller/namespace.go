@@ -17,6 +17,19 @@ type Namespace struct {
 	repoResources *repository.Resource
 }
 
+func (ctrl *Namespace) GetAll(c *fiber.Ctx) error {
+	nss := ctrl.repoResources.GetAllNamespaces()
+	if nss == nil {
+		nss = []dto.Resource{}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.Resource{
+		"apiVersion": "v1",
+		"kind":       "NamespaceList",
+		"items":      nss,
+	})
+}
+
 func (ctrl *Namespace) Get(c *fiber.Ctx) error {
 	var (
 		rk dto.ResourceKey
