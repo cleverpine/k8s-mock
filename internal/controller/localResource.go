@@ -7,14 +7,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewLocalResourceController(repoResources *repository.Resource) *LocalResource {
+func NewLocalResourceController(repoResource *repository.Resource, repoNamespace *repository.Namespace) *LocalResource {
 	return &LocalResource{
-		repoResources: repoResources,
+		repoResource:  repoResource,
+		repoNamespace: repoNamespace,
 	}
 }
 
 type LocalResource struct {
-	repoResources *repository.Resource
+	repoResource  *repository.Resource
+	repoNamespace *repository.Namespace
 }
 
 func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
@@ -30,7 +32,7 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 	var resources []dto.Resource
 
 	if md := filter.GetMetadataFilter(); md != "" {
-		r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+		r, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
 			return r.GetString("metadata#name") == md &&
 				r.GetString("metadata#namespace") == rk.Namespace
 		})
@@ -38,12 +40,9 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusOK).JSON(r)
 		}
 	} else {
-		resources = ctrl.repoResources.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
+		resources = ctrl.repoResource.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
 			return r.GetString("metadata#namespace") == rk.Namespace
 		})
-		// if resources != nil {
-		// 	return c.Status(fiber.StatusOK).JSON(resources)
-		// }
 	}
 
 	// TODO: fix
@@ -70,7 +69,7 @@ func (ctrl *LocalResource) GetSpecific(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+	r, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
 		return r.GetString("metadata#name") == rk.ResourceName &&
 			r.GetString("metadata#namespace") == rk.Namespace
 	})
@@ -92,7 +91,7 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 		return err
 	}
 
-	ctrl.repoResources.Append(&rk, &body)
+	ctrl.repoResource.Append(&rk, &body)
 	return c.Status(fiber.StatusCreated).JSON(body)
 }
 
@@ -106,7 +105,7 @@ func (ctrl *LocalResource) Update(c *fiber.Ctx) error {
 		return err
 	}
 
-	resource, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+	resource, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
 		return r.GetString("metadata#name") == rk.ResourceName &&
 			r.GetString("metadata#namespace") == rk.Namespace
 	})
