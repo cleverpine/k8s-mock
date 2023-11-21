@@ -8,14 +8,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewGlobalResourceController(repoResources *repository.Resource) *GlobalResource {
+func NewGlobalResourceController(repoResources *repository.Resource, repoNamespaces *repository.Namespace) *GlobalResource {
 	return &GlobalResource{
-		repoResources: repoResources,
+		repoResources:  repoResources,
+		repoNamespaces: repoNamespaces,
 	}
 }
 
 type GlobalResource struct {
-	repoResources *repository.Resource
+	repoResources  *repository.Resource
+	repoNamespaces *repository.Namespace
 }
 
 func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
@@ -28,12 +30,12 @@ func (ctrl *GlobalResource) Get(c *fiber.Ctx) error {
 	}
 
 	if rk.IsOSProject() {
-		projects := ctrl.repoResources.GetNamespaces()
+		ns := ctrl.repoNamespaces.GetAll()
 
 		return c.Status(fiber.StatusOK).JSON(dto.Resource{
 			"apiVersion": fmt.Sprintf("%s/%s", rk.APIGroup, rk.Version),
 			"kind":       "ProjectList",
-			"items":      projects,
+			"items":      ns,
 		})
 	}
 
@@ -84,7 +86,7 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 
 	if rk.IsK8sNamespace() || rk.IsOSProject() {
 		body.Set("status", dto.Resource{"phase": "Active"})
-		ctrl.repoResources.AppendNamespace(&body)
+		ctrl.repoNamespaces.Add(&body)
 	} else {
 		ctrl.repoResources.Append(&rk, &body)
 	}

@@ -7,21 +7,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewNamespaceController(repoResources *repository.Resource) *Namespace {
+func NewNamespaceController(repo *repository.Namespace) *Namespace {
 	return &Namespace{
-		repoResources: repoResources,
+		repo: repo,
 	}
 }
 
 type Namespace struct {
-	repoResources *repository.Resource
+	repo *repository.Namespace
 }
 
 func (ctrl *Namespace) GetAll(c *fiber.Ctx) error {
-	nss := ctrl.repoResources.GetAllNamespaces()
-	if nss == nil {
-		nss = []dto.Resource{}
-	}
+	nss := ctrl.repo.GetAll()
 
 	return c.Status(fiber.StatusOK).JSON(dto.Resource{
 		"apiVersion": "v1",
@@ -39,7 +36,7 @@ func (ctrl *Namespace) Get(c *fiber.Ctx) error {
 		return err
 	}
 
-	ns := ctrl.repoResources.GetNamespace(&rk)
+	ns := ctrl.repo.Get(&rk)
 	if ns == nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	} else {
@@ -57,7 +54,7 @@ func (ctrl *Namespace) Update(c *fiber.Ctx) error {
 		return err
 	}
 
-	ns := ctrl.repoResources.GetNamespace(&rk)
+	ns := ctrl.repo.Get(&rk)
 	if ns == nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
@@ -76,7 +73,7 @@ func (ctrl *Namespace) Delete(c *fiber.Ctx) error {
 		return err
 	}
 
-	ns := ctrl.repoResources.DeleteNamespace(&rk)
+	ns := ctrl.repo.Delete(&rk)
 	if ns == nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	} else {

@@ -41,6 +41,9 @@ func (ctrl *LocalResource) Get(c *fiber.Ctx) error {
 		resources = ctrl.repoResources.FindResourcesByFilter(&rk, func(r *dto.Resource) bool {
 			return r.GetString("metadata#namespace") == rk.Namespace
 		})
+		// if resources != nil {
+		// 	return c.Status(fiber.StatusOK).JSON(resources)
+		// }
 	}
 
 	// TODO: fix

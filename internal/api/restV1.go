@@ -9,16 +9,19 @@ import (
 
 func RESTV1(app *fiber.App) {
 	var (
-		repoResources = repository.NewResourceRepository()
+		store = repository.NewStoreRepository()
+
+		namespaceRepo = repository.NewNamespaceRepository(store)
+		repoResources = repository.NewResourceRepository(store)
 	)
 
 	var (
 		debugCtrl         = controller.NewDebugController()
 		apiDefinitionCtrl = controller.NewAPIDefinitionController()
-		namespaceCtrl     = controller.NewNamespaceController(repoResources)
+		namespaceCtrl     = controller.NewNamespaceController(namespaceRepo)
 		metadataCtrl      = controller.NewMetadataController()
 
-		globalResourceCtrl = controller.NewGlobalResourceController(repoResources)
+		globalResourceCtrl = controller.NewGlobalResourceController(repoResources, namespaceRepo)
 		localResourceCtrl  = controller.NewLocalResourceController(repoResources)
 	)
 
