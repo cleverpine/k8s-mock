@@ -24,22 +24,27 @@ func RESTV1(app *fiber.App) {
 
 	app.Use(debugCtrl.Middleware)
 
-	app.Get("/version", metadataCtrl.Version)
-
 	// app.Static("/", "./files")
 
-	// API Definitions
+	/**
+		API DEFINITIONS
+	**/
+	app.Get("/version", metadataCtrl.Version)
 	app.Get("/api", apiDefinitionCtrl.GetVersions)
 	app.Get("/api/:version", apiDefinitionCtrl.GetAllAPIs)
 	app.Get("/apis", apiDefinitionCtrl.GetAll)
 	app.Get("/apis/:apiGroup/:version", apiDefinitionCtrl.Get)
 
-	// Global Resource Management
+	/**
+		GLOBAL RESOURCE MANAGEMENT
+	**/
 	app.Get("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Get)
-	app.Get("/apis/:apiGroup/:version/:resourceType/~", globalResourceCtrl.GetUser)
 	app.Post("/apis/:apiGroup/:version/:resourceType", globalResourceCtrl.Create)
+	app.Get("/apis/:apiGroup/:version/:resourceType/~", globalResourceCtrl.GetUser)
 
-	// Namespace Management
+	/**
+		NAMESPACE MANAGEMENT
+	**/
 	app.Get("/api/:version/namespaces", namespaceCtrl.GetAll)
 	app.Get("/api/:version/namespaces/:namespace", namespaceCtrl.Get)
 	app.Get("/api/:version/projects/:namespace", namespaceCtrl.Get)
@@ -56,20 +61,25 @@ func RESTV1(app *fiber.App) {
 	app.Delete("/apis/:apiGroup/:version/namespaces/:namespace", namespaceCtrl.Delete)
 	app.Delete("/apis/:apiGroup/:version/projects/:namespace", namespaceCtrl.Delete)
 
-	// Local Resource Management
+	/**
+		LOCAL RESOURCE MANAGEMENT
+	**/
 	app.Get("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Get)
 	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Get)
-	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.GetSpecific)
-	app.Patch("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.Update)
 	app.Get("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.Get)
+
+	app.Get("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.GetSpecific)
+	app.Get("/api/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.GetSpecific)
+
+	app.Patch("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.Update)
+	app.Patch("/api/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.Update)
+
 	app.Post("/api/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/namespaces/:namespace/:resourceType", localResourceCtrl.Create)
 	app.Post("/apis/:apiGroup/:version/projects/:namespace/:resourceType", localResourceCtrl.Create)
-	app.Get("/api/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.GetSpecific)
-	app.Patch("/api/:version/namespaces/:namespace/:resourceType/:resourceName", localResourceCtrl.Update)
 
-	app.Use(func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusNotFound)
-	})
+	// app.Use(func(c *fiber.Ctx) error {
+	// 	return c.SendStatus(fiber.StatusNotFound)
+	// })
 
 }
