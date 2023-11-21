@@ -97,4 +97,19 @@ func (s *Store) FindAll(key string, filter FilterFunc) []dto.Resource {
 	return found
 }
 
+func (s *Store) DeleteAll(filter FilterFunc) {
+	s.resourcesM.Lock()
+	defer s.resourcesM.Unlock()
+
+	for key, resources := range s.resources {
+		filtered := make([]dto.Resource, 0)
+		for _, resource := range resources {
+			if !filter(&resource) {
+				filtered = append(filtered, resource)
+			}
+		}
+		s.resources[key] = filtered
+	}
+}
+
 type FilterFunc func(r *dto.Resource) bool

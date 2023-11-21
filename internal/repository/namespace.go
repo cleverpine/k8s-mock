@@ -32,6 +32,10 @@ func (repo *Namespace) Delete(key *dto.ResourceKey) *dto.Resource {
 	}
 
 	repo.s.Delete("namespaces", i)
+	repo.s.DeleteAll(func(r *dto.Resource) bool {
+		return r.GetString("metadata#namespace") == key.Namespace
+	})
+
 	return r
 }
 
