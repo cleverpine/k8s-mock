@@ -85,9 +85,22 @@ func (ctrl *GlobalResource) Create(c *fiber.Ctx) error {
 	}
 
 	if rk.IsK8sNamespace() || rk.IsOSProject() {
+		rs := ctrl.repoNamespaces.Get(&rk)
+		if rs != nil {
+			return c.Status(fiber.StatusOK).JSON(rs)
+		}
+
 		body.Set("status", dto.Resource{"phase": "Active"})
 		ctrl.repoNamespaces.Add(&body)
 	} else {
+		resourceName := body.GetString("metadata#name")
+		r, _ := ctrl.repoResources.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+			return r.GetString("metadata#name") == resourceName
+		})
+		if r != nil {
+			return c.Status(fiber.StatusOK).JSON(r)
+		}
+
 		ctrl.repoResources.Append(&rk, &body)
 	}
 	return c.Status(fiber.StatusCreated).JSON(body)

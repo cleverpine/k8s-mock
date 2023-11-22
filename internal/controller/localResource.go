@@ -91,6 +91,16 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 		return err
 	}
 
+	resourceName := body.GetString("metadata#name")
+	r, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
+		return r.GetString("metadata#name") == resourceName &&
+			r.GetString("metadata#namespace") == rk.Namespace
+	})
+
+	if r != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.StatusBadRequest)
+	}
+
 	ctrl.repoResource.Append(&rk, &body)
 	return c.Status(fiber.StatusCreated).JSON(body)
 }
