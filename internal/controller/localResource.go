@@ -91,6 +91,10 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 		return err
 	}
 
+	if r := ctrl.repoNamespace.Get(&rk); r == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.Error{Error: "Namespace doesn't exist"})
+	}
+
 	resourceName := body.GetString("metadata#name")
 	r, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
 		return r.GetString("metadata#name") == resourceName &&
@@ -113,6 +117,10 @@ func (ctrl *LocalResource) Update(c *fiber.Ctx) error {
 	err := makeInputBuilder(c).InURL(&rk).InBody(&body).Error()
 	if err != nil {
 		return err
+	}
+
+	if r := ctrl.repoNamespace.Get(&rk); r == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.Error{Error: "Namespace doesn't exist"})
 	}
 
 	resource, _ := ctrl.repoResource.FindResourceByFilter(&rk, func(r *dto.Resource) bool {
