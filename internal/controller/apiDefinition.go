@@ -14,8 +14,8 @@ func NewAPIDefinitionController() *APIDefinition {
 type APIDefinition struct {
 }
 
-func (ctrl *APIDefinition) GetVersions(c *fiber.Ctx) error {
-	return sendFile(c, "files/api-versions.json")
+func (ctrl *APIDefinition) GetAPI(c *fiber.Ctx) error {
+	return sendFile(c, "files/api.json")
 }
 
 func (ctrl *APIDefinition) GetAllAPIs(c *fiber.Ctx) error {
@@ -26,7 +26,7 @@ func (ctrl *APIDefinition) GetAllAPIs(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return sendFile(c, fmt.Sprintf("files/api-%s.json", rk.Version))
+	return sendFile(c, fmt.Sprintf("files/apis/%s/serverresources.json", rk.Version))
 }
 
 func (ctrl *APIDefinition) GetAll(c *fiber.Ctx) error {

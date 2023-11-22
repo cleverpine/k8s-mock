@@ -33,7 +33,7 @@ func RESTV1(app *fiber.App) {
 		API DEFINITIONS
 	**/
 	app.Get("/version", ctrlMetadata.Version)
-	app.Get("/api", ctrlApiDefinition.GetVersions)
+	app.Get("/api", ctrlApiDefinition.GetAPI)
 	app.Get("/api/:version", ctrlApiDefinition.GetAllAPIs)
 	app.Get("/apis", ctrlApiDefinition.GetAll)
 	app.Get("/apis/:apiGroup/:version", ctrlApiDefinition.Get)
