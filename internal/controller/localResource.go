@@ -98,7 +98,7 @@ func (ctrl *LocalResource) Create(c *fiber.Ctx) error {
 	})
 
 	if r != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.StatusBadRequest)
+		return c.Status(fiber.StatusOK).JSON(r)
 	}
 
 	ctrl.repoResource.Append(&rk, &body)
